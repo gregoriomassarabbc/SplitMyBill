@@ -33,11 +33,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -111,6 +113,11 @@ fun BillForm(
         mutableIntStateOf(0)
     }
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val sliderPosition = remember {
+        mutableFloatStateOf(0f)
+    }
+
     Surface(
         modifier = Modifier
             .padding(top = 40.dp)
@@ -134,29 +141,24 @@ fun BillForm(
                     if (!validState) return@KeyboardActions
                     onValueChange(totalBillState.value.trim())
                     keyboardController?.hide()
-                }
-            )
-            if (validState) {
-                Row(
-                    modifier = Modifier.padding(3.dp),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    Text(
-                        "Split",
-                        modifier = Modifier.align(
-                            alignment = Alignment.CenterVertically
-                        )
+                })
+//            if (validState) {
+            Row(
+                modifier = Modifier.padding(3.dp), horizontalArrangement = Arrangement.Start
+            ) {
+                Text(
+                    "Split", modifier = Modifier.align(
+                        alignment = Alignment.CenterVertically
                     )
-                    Spacer(modifier = Modifier.width(120.dp))
-                    Row(
-                        modifier = Modifier.padding(horizontal = 3.dp),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        RoundIconButton(
-                            modifier = modifier,
-                            imageVector = Icons.Default.Close,
-                            onClick = { onPeopleChange(minNumberOfPeople(numberOfPeople)) }
-                        )
+                )
+                Spacer(modifier = Modifier.width(120.dp))
+                Row(
+                    modifier = Modifier.padding(horizontal = 3.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    RoundIconButton(modifier = modifier,
+                        imageVector = Icons.Default.Close,
+                        onClick = { onPeopleChange(minNumberOfPeople(numberOfPeople)) })
 
                         (Text(numberOfPeople.intValue.toString(), modifier = Modifier
                             .padding(start = 9.dp, end = 9.dp)
@@ -168,11 +170,44 @@ fun BillForm(
                             onClick = { onPeopleChange(numberOfPeople.intValue ++) }
                         )
 
-                    }
                 }
-            } else {
-                Box { }
             }
+            // Tip Row
+            Row(
+                modifier = Modifier.padding(horizontal = 3.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Text(
+                    "Tip", modifier = Modifier.align(
+                        alignment = Alignment.CenterVertically
+                    )
+                )
+                Spacer(modifier = Modifier.width(200.dp))
+                Text(
+                    "£33.00", modifier = Modifier.align(
+                        alignment = Alignment.CenterVertically
+                    )
+                )
+            }
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("33%")
+                Spacer(modifier = Modifier.height(10.dp))
+
+                //Slider
+                Slider(
+                    value = sliderPosition.floatValue,
+                    modifier = Modifier.fillMaxWidth(),
+                    onValueChange = { newValue -> sliderPosition.floatValue = newValue }
+                )
+            }
+
+
+//            } else {
+//                Box { }
+//            }
         }
 
     }
@@ -294,7 +329,6 @@ fun Greeting(name: String = "Gregorio") {
     )
 }
 
-@Preview(showBackground = false)
 @Composable
 fun BillPreview() {
     SplitBillApp {}
