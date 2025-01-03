@@ -3,6 +3,7 @@ package uk.co.bbc.introtocompose
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
+import android.util.MutableInt
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -35,6 +36,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -96,7 +99,7 @@ fun MainContent() {
 fun BillForm(
     modifier: Modifier = Modifier,
     onValueChange: (String) -> Unit = {},
-    onPeopleChange: (Int) -> Unit = {}
+    onPeopleChange: (Int) -> Int = { it }
 ) {
     val totalBillState = remember {
         mutableStateOf("")
@@ -152,7 +155,7 @@ fun BillForm(
                         RoundIconButton(
                             modifier = modifier,
                             imageVector = Icons.Default.Close,
-                            onClick = { onPeopleChange(numberOfPeople.intValue --) }
+                            onClick = { onPeopleChange(minNumberOfPeople(numberOfPeople)) }
                         )
 
                         (Text(numberOfPeople.intValue.toString(), modifier = Modifier
@@ -264,6 +267,11 @@ fun CreateCircle(age: Int = 0, updateAge: (Int) -> Unit) {
             )
         }
     }
+}
+
+fun minNumberOfPeople(people: MutableIntState): Int {
+    if (people.intValue > 0) people.intValue--
+    return people.intValue
 }
 
 @Composable
