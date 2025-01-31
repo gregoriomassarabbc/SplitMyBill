@@ -91,6 +91,7 @@ fun SplitBillApp(content: @Composable () -> Unit) {
 
 @Composable
 fun MainContent() {
+
     BillForm { billAmount ->
         Log.i("AMOUNT", "Bill Amount: ${billAmount.toInt() * 1000}")
     }
@@ -118,13 +119,12 @@ fun BillForm(
         mutableFloatStateOf(0f)
     }
 
+
+    TopHeader()
+
     Surface(
-        modifier = Modifier
-            .padding(top = 40.dp)
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(
-            corner = CornerSize(8.dp)
-        ),
+        modifier = Modifier.padding(top = 40.dp).fillMaxWidth(),
+        shape = RoundedCornerShape(corner = CornerSize(8.dp)),
         border = BorderStroke(width = 1.dp, color = Color.LightGray)
     ) {
         Column(
@@ -132,8 +132,7 @@ fun BillForm(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            InputField(
-                valueState = totalBillState,
+            InputField(valueState = totalBillState,
                 labelId = "Enter Bill",
                 enabled = true,
                 isSingleLine = true,
@@ -199,8 +198,13 @@ fun BillForm(
                 //Slider
                 Slider(
                     value = sliderPosition.floatValue,
-                    modifier = Modifier.fillMaxWidth(),
-                    onValueChange = { newValue -> sliderPosition.floatValue = newValue }
+                    steps = 5,
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp),
+                    onValueChange = {
+                        newValue -> sliderPosition.floatValue = newValue
+                        Log.i("SLIDER", "Slider Value: ${sliderPosition.value}")
+                    },
+
                 )
             }
 
@@ -217,7 +221,7 @@ fun BillForm(
 @Composable
 fun TopHeader(totalPerPerson: Double = 122.0) {
     Surface(
-        modifier = Modifier
+        modifier = Modifier.padding(top = 60.dp)
             .fillMaxWidth()
             .height(150.dp)
             .clip(shape = RoundedCornerShape(corner = CornerSize(33.dp))),
