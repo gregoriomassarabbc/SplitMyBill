@@ -166,7 +166,11 @@ fun BillForm(
                 ) {
                     RoundIconButton(modifier = modifier,
                         imageVector = Icons.Default.Delete,
-                        onClick = { onPeopleChange(minNumberOfPeople(numberOfPeople)) })
+                        onClick = {
+                            onPeopleChange(minNumberOfPeople(numberOfPeople))
+                            totalPerPersonValueState.doubleValue = calculateTotalPerPerson(totalBill = totalBillState.value.toDouble(), splitBillBy = numberOfPeople.intValue, tipPercentage = tipPercentage)
+                        }
+                    )
 
                     (Text(
                         numberOfPeople.intValue.toString(), modifier = Modifier
@@ -177,7 +181,10 @@ fun BillForm(
                     RoundIconButton(
                         modifier = modifier,
                         imageVector = Icons.Default.Add,
-                        onClick = { onPeopleChange(numberOfPeople.intValue++) }
+                        onClick = {
+                            onPeopleChange(numberOfPeople.intValue++)
+                            totalPerPersonValueState.doubleValue = calculateTotalPerPerson(totalBill = totalBillState.value.toDouble(), splitBillBy = numberOfPeople.intValue, tipPercentage = tipPercentage)
+                        }
                     )
 
                 }
