@@ -3,7 +3,6 @@ package uk.co.bbc.introtocompose
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
-import android.util.MutableInt
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -20,16 +19,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.magnifier
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -39,7 +35,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableIntState
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -48,9 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -59,6 +53,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import uk.co.bbc.introtocompose.components.InputField
 import uk.co.bbc.introtocompose.ui.theme.IntroToComposeTheme
+import uk.co.bbc.introtocompose.util.calculateTotalPerPerson
+import uk.co.bbc.introtocompose.util.calculateTotalTip
 import uk.co.bbc.introtocompose.widgets.RoundIconButton
 import kotlin.math.absoluteValue
 
@@ -112,7 +108,7 @@ fun BillForm(
         totalBillState.value.trim().isNotEmpty()
     }
     val numberOfPeople = remember {
-        mutableIntStateOf(0)
+        mutableIntStateOf(1)
     }
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -120,13 +116,23 @@ fun BillForm(
         mutableFloatStateOf(0f)
     }
 
-    val tipPercentage = (sliderPosition.floatValue * 100).toInt()
+    val tipPercentage =  (sliderPosition.floatValue * 100).toInt()
+
+    val tipAmount = remember {
+        mutableDoubleStateOf(0.0)
+    }
+
+    val totalPerPersonValueState = remember {
+        mutableDoubleStateOf(0.0)
+    }
 
 
-    TopHeader()
+    TopHeader(totalPerPerson = totalPerPersonValueState.doubleValue)
 
     Surface(
-        modifier = Modifier.padding(top = 40.dp).fillMaxWidth(),
+        modifier = Modifier
+            .padding(top = 40.dp)
+            .fillMaxWidth(),
         shape = RoundedCornerShape(corner = CornerSize(8.dp)),
         border = BorderStroke(width = 1.dp, color = Color.LightGray)
     ) {
@@ -142,7 +148,7 @@ fun BillForm(
                 onAction = KeyboardActions {
                     if (!validState) return@KeyboardActions
                     onValueChange(totalBillState.value.trim())
-                    keyboardController?.hide()
+                    keyboardController?.show()
                 })
 //            if (validState) {
             Row(
@@ -162,15 +168,17 @@ fun BillForm(
                         imageVector = Icons.Default.Delete,
                         onClick = { onPeopleChange(minNumberOfPeople(numberOfPeople)) })
 
-                        (Text(numberOfPeople.intValue.toString(), modifier = Modifier
+                    (Text(
+                        numberOfPeople.intValue.toString(), modifier = Modifier
                             .padding(start = 9.dp, end = 9.dp)
-                            .align(Alignment.CenterVertically)))
+                            .align(Alignment.CenterVertically)
+                    ))
 
-                        RoundIconButton(
-                            modifier = modifier,
-                            imageVector = Icons.Default.Add,
-                            onClick = { onPeopleChange(numberOfPeople.intValue ++) }
-                        )
+                    RoundIconButton(
+                        modifier = modifier,
+                        imageVector = Icons.Default.Add,
+                        onClick = { onPeopleChange(numberOfPeople.intValue++) }
+                    )
 
                 }
             }
@@ -185,8 +193,7 @@ fun BillForm(
                     )
                 )
                 Spacer(modifier = Modifier.width(200.dp))
-                Text(
-                    "£33.00", modifier = Modifier.align(
+                Text("£ ${tipAmount.doubleValue}", modifier = Modifier.align(
                         alignment = Alignment.CenterVertically
                     )
                 )
@@ -201,14 +208,25 @@ fun BillForm(
                 //Slider
                 Slider(
                     value = sliderPosition.floatValue,
-                    steps = 5,
-                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp),
-                    onValueChange = {
-                        newValue -> sliderPosition.floatValue = newValue
-                        Log.i("SLIDER", "Slider Value: ${sliderPosition.value}")
+                    steps = 50,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp),
+                    onValueChange = { newValue ->
+                        sliderPosition.floatValue = newValue
+                        Log.i("SLIDER", "Slider Value: ${sliderPosition.floatValue}")
+                        Log.i("SLIDER", "Total Bill: ${totalBillState.value}")
+                        Log.i("SLIDER", "TiP Percentage: $tipPercentage")
+                        Log.i("SLIDER", "TiP Amount: ${tipAmount.doubleValue}")
+
+                        tipAmount.doubleValue =
+                            calculateTotalTip(totalBill = totalBillState.value.toDouble(), tipPercentage = tipPercentage)
+
+                        totalPerPersonValueState.doubleValue = calculateTotalPerPerson(totalBill = totalBillState.value.toDouble(), splitBillBy = numberOfPeople.intValue, tipPercentage = tipPercentage)
                     },
 
-                )
+
+                    )
             }
 
 
@@ -224,7 +242,8 @@ fun BillForm(
 @Composable
 fun TopHeader(totalPerPerson: Double = 122.0) {
     Surface(
-        modifier = Modifier.padding(top = 60.dp)
+        modifier = Modifier
+            .padding(top = 60.dp)
             .fillMaxWidth()
             .height(150.dp)
             .clip(shape = RoundedCornerShape(corner = CornerSize(33.dp))),
@@ -237,12 +256,12 @@ fun TopHeader(totalPerPerson: Double = 122.0) {
         ) {
             val total = "%.2f".format(totalPerPerson)
             Text(
-                text = "$$total",
-                style = MaterialTheme.typography.titleMedium
+                text = "Total Per Person",
+                style = MaterialTheme.typography.titleLarge
             )
             Text(
-                text = "£123",
-                style = MaterialTheme.typography.titleLarge
+                text = "£$total",
+                style = MaterialTheme.typography.titleMedium
             )
         }
     }
@@ -312,7 +331,7 @@ fun CreateCircle(age: Int = 0, updateAge: (Int) -> Unit) {
 }
 
 fun minNumberOfPeople(people: MutableIntState): Int {
-    if (people.intValue > 0) people.intValue--
+    if (people.intValue > 1) people.intValue--
     return people.intValue
 }
 
